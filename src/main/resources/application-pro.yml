@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: reconciliation
+  datasource:
+    url: jdbc:postgresql://finops-ms-finance-dev.wefox-dev.int:5432/ms_finance?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory&sslmode=require
+    username: ms_finance-default-rw
+    password: ZjeIfRwSmSV7ZzHBC84SyBa0FgJMzdiP
+    driverClassName: org.postgresql.Driver
+    hikari:
+      schema: finance
+
+ixopay:
+  url: https://wefox.ixopay.com/api/v3/
+  user: one-api-live
+  password: 0294b800b81af7a7298ff49b2165cbdf3b0133df
+  direct-debit: YRj9URqFn39XrDRgil9lwozjQ4CoJa
