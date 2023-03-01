@@ -32,6 +32,9 @@ public class ReconciliationService {
 
   @Value("${ixopay.direct-debit}")
   private String directDebitApiKey;
+
+  @Value("${ixopay.invoice}")
+  private String invoiceApiKey;
   @Transactional
   public void migrateAllDebit() {
     final List<PaymentReconciliation> paymentReconciliation =
@@ -92,9 +95,10 @@ public class ReconciliationService {
 
   private PaymentMethod getPaymentMethod(final PaymentReconciliation paymentReconciliation){
     PaymentMethod paymentMethod;
+    String apiKey = "EUR".equals(paymentReconciliation.getCurrency()) ? directDebitApiKey : invoiceApiKey;
     if(paymentReconciliation.getType() == PaymentType.DEBIT){
       final TransactionResponse response = ixopayClient.retrieveStatusByMerchantTransactionId(
-              directDebitApiKey, paymentReconciliation.getId());
+              apiKey, paymentReconciliation.getId());
       paymentMethod = paymentMethodRepository
               .findByGatewayReferenceId(response.getReferenceUuid()).orElseThrow();
     }else{
