@@ -25,4 +25,10 @@ public class PaymentMethod {
 
   private String gatewayReferenceId;
 
+  private String accountId;
+
+  private Boolean accountDefault;
+
+  private Boolean active;
+
 }

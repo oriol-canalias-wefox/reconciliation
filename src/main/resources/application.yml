@@ -14,3 +14,4 @@ ixopay:
   user: one-api
   password: 0cb09805767db4acc02837011dffe70f22a63322
   direct-debit: one-sepa-test
+  payout: one-sepa-test-payout

@@ -14,3 +14,4 @@ ixopay:
   user: one-api-live
   password: 0294b800b81af7a7298ff49b2165cbdf3b0133df
   direct-debit: YRj9URqFn39XrDRgil9lwozjQ4CoJa
+  payout: one-sepa-payout

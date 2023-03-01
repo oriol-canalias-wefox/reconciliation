@@ -10,7 +10,10 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface PaymentReconciliationRepository extends CrudRepository<PaymentReconciliation, String> {
 
-  @Query("select PaymentReconciliation from PaymentReconciliation p where (p.migrate = null or p.migrate = false) "
+  @Query("select p from PaymentReconciliation p where (p.migrate = null or p.migrate = false) "
    + " and p.type = :type ")
-  List<PaymentReconciliation> find1ByType(PaymentType type);
+  List<PaymentReconciliation> findByType(PaymentType type);
+
+  @Query("select p from PaymentReconciliation p where p.migrate = null or p.migrate = false")
+  List<PaymentReconciliation> findNotMigrated();
 }
