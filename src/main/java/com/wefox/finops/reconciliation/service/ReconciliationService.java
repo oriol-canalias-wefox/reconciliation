@@ -12,7 +12,6 @@ import com.wefox.finops.reconciliation.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.webjars.NotFoundException;
@@ -63,17 +62,7 @@ public class ReconciliationService {
   }
 
   private void migrate(final PaymentReconciliation paymentReconciliation){
-    PaymentMethod paymentMethod;
-    if(paymentReconciliation.getType() == PaymentType.DEBIT){
-      final TransactionResponse response = ixopayClient.retrieveStatusByMerchantTransactionId(
-              directDebitApiKey, paymentReconciliation.getId());
-      paymentMethod = paymentMethodRepository
-              .findByGatewayReferenceId(response.getReferenceUuid()).orElseThrow();
-    }else{
-      List<PaymentMethod> pds = paymentMethodRepository.findByAccountDefault(paymentReconciliation.getAccountId());
-      paymentMethod = pds.get(0);
-    }
-
+    final PaymentMethod paymentMethod = getPaymentMethod(paymentReconciliation);
     final Payment payment = Payment.builder()
             .id(paymentReconciliation.getId())
             .externalPaymentId(paymentReconciliation.getExternalPaymentId())
@@ -99,5 +88,19 @@ public class ReconciliationService {
     paymentReconciliation.setMigrate(true);
     paymentReconciliationRepository.save(paymentReconciliation);
 
+  }
+
+  private PaymentMethod getPaymentMethod(final PaymentReconciliation paymentReconciliation){
+    PaymentMethod paymentMethod;
+    if(paymentReconciliation.getType() == PaymentType.DEBIT){
+      final TransactionResponse response = ixopayClient.retrieveStatusByMerchantTransactionId(
+              directDebitApiKey, paymentReconciliation.getId());
+      paymentMethod = paymentMethodRepository
+              .findByGatewayReferenceId(response.getReferenceUuid()).orElseThrow();
+    }else{
+      List<PaymentMethod> pds = paymentMethodRepository.findByAccountDefault(paymentReconciliation.getAccountId());
+      paymentMethod = pds.get(0);
+    }
+    return paymentMethod;
   }
 }
