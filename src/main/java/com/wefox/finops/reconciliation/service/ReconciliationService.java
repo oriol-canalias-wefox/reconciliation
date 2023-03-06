@@ -2,10 +2,12 @@ package com.wefox.finops.reconciliation.service;
 
 import com.wefox.finops.reconciliation.client.IxopayClient;
 import com.wefox.finops.reconciliation.domain.Payment;
+import com.wefox.finops.reconciliation.domain.PaymentCopy;
 import com.wefox.finops.reconciliation.domain.PaymentMethod;
 import com.wefox.finops.reconciliation.domain.PaymentReconciliation;
 import com.wefox.finops.reconciliation.domain.PaymentType;
 import com.wefox.finops.reconciliation.domain.TransactionResponse;
+import com.wefox.finops.reconciliation.repository.PaymentCopyRepository;
 import com.wefox.finops.reconciliation.repository.PaymentMethodRepository;
 import com.wefox.finops.reconciliation.repository.PaymentReconciliationRepository;
 import com.wefox.finops.reconciliation.repository.PaymentRepository;
@@ -27,6 +29,8 @@ public class ReconciliationService {
   private final PaymentMethodRepository paymentMethodRepository;
   private final PaymentReconciliationRepository paymentReconciliationRepository;
   private final PaymentRepository paymentRepository;
+  private final PaymentCopyRepository paymentCopyRepository;
+
 
   private final IxopayClient ixopayClient;
 
@@ -59,13 +63,15 @@ public class ReconciliationService {
   }
 
   private void migrateList(final List<PaymentReconciliation> paymentReconciliations){
-      for(PaymentReconciliation paymentReconciliation : paymentReconciliations) {
+      List<PaymentReconciliation> pr1000 = paymentReconciliations.subList(0,2500);
+      for(PaymentReconciliation paymentReconciliation : pr1000) {
           migrate(paymentReconciliation);
       }
   }
 
   private void migrate(final PaymentReconciliation paymentReconciliation){
     final PaymentMethod paymentMethod = getPaymentMethod(paymentReconciliation);
+    /* with payment
     final Payment payment = Payment.builder()
             .id(paymentReconciliation.getId())
             .externalPaymentId(paymentReconciliation.getExternalPaymentId())
@@ -86,7 +92,31 @@ public class ReconciliationService {
             .countryCode("EUR".equals(paymentReconciliation.getCurrency()) ? "DE" : "CH")
             .paymentMethod(paymentMethod)
             .build();
-    paymentRepository.save(payment);
+            paymentRepository.save(payment);
+            */
+
+    //The Copy
+    final PaymentCopy payment = PaymentCopy.builder()
+            .id(paymentReconciliation.getId())
+            .externalPaymentId(paymentReconciliation.getExternalPaymentId())
+            .accountId(paymentReconciliation.getAccountId())
+            .type(paymentReconciliation.getType())
+            .status(paymentReconciliation.getStatus())
+            .amount(paymentReconciliation.getAmount())
+            .currency(paymentReconciliation.getCurrency())
+            .gatewayReferenceId(paymentReconciliation.getGatewayReferenceId())
+            .description(paymentReconciliation.getDescription())
+            .qrCode(paymentReconciliation.getQrCode())
+            .errorCode(paymentReconciliation.getErrorCode())
+            .errorMessage(paymentReconciliation.getErrorMessage())
+            .createdDate(paymentReconciliation.getCreatedDate())
+            .modifiedDate(paymentReconciliation.getModifiedDate())
+            .executionDate(paymentReconciliation.getExecutionDate())
+            .issuingDate(paymentReconciliation.getIssuingDate())
+            .countryCode("EUR".equals(paymentReconciliation.getCurrency()) ? "DE" : "CH")
+            .paymentMethod(paymentMethod)
+            .build();
+    paymentCopyRepository.save(payment);
 
     paymentReconciliation.setMigrate(true);
     paymentReconciliationRepository.save(paymentReconciliation);
