@@ -19,5 +19,9 @@ public class ReconciliationController {
   public void migrateDebits() { reconciliationService.migrateAllDebit();}
 
   @PostMapping()
-  public void migrateAll() { reconciliationService.migrateAll();}
+  public void migrateAll(@RequestParam int size) {
+    for (int i = 0; i <= size / 100; i++) {
+      reconciliationService.migrateAll();
+    }
+  }
 }

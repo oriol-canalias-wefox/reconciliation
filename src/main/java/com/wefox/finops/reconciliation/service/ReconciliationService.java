@@ -11,9 +11,13 @@ import com.wefox.finops.reconciliation.repository.PaymentCopyRepository;
 import com.wefox.finops.reconciliation.repository.PaymentMethodRepository;
 import com.wefox.finops.reconciliation.repository.PaymentReconciliationRepository;
 import com.wefox.finops.reconciliation.repository.PaymentRepository;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.webjars.NotFoundException;
@@ -56,10 +60,20 @@ public class ReconciliationService {
 
   @Transactional
   public void migrateAll() {
+    log.info("migrate all, start");
     final List<PaymentReconciliation> paymentReconciliation =
-            paymentReconciliationRepository.findNotMigrated();
+            paymentReconciliationRepository.findNotMigrated(PageRequest.of(0, 100));
     if(paymentReconciliation.isEmpty()) throw new NotFoundException("Not found");
-    migrateList(paymentReconciliation);
+    final ForkJoinPool forkJoinPool = new ForkJoinPool(10);
+    try {
+      forkJoinPool.submit(() -> paymentReconciliation.stream().parallel().forEach(this::migrate)).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+
+    log.info("migrate all, finish");
   }
 
   private void migrateList(final List<PaymentReconciliation> paymentReconciliations){
@@ -70,6 +84,7 @@ public class ReconciliationService {
   }
 
   private void migrate(final PaymentReconciliation paymentReconciliation){
+    log.info("migrate id={}", paymentReconciliation.getId());
     final PaymentMethod paymentMethod = getPaymentMethod(paymentReconciliation);
     /* with payment
     final Payment payment = Payment.builder()
@@ -120,7 +135,7 @@ public class ReconciliationService {
 
     paymentReconciliation.setMigrate(true);
     paymentReconciliationRepository.save(paymentReconciliation);
-
+    log.info("final migrate id={}", paymentReconciliation.getId());
   }
 
   private PaymentMethod getPaymentMethod(final PaymentReconciliation paymentReconciliation){
